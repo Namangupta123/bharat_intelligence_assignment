@@ -1,7 +1,9 @@
 import re
 import secrets
 from rest_framework.generics import ListAPIView, UpdateAPIView
+import logging
 from rest_framework.views import APIView
+from rest_framework import serializers as drf_serializers
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -49,7 +51,12 @@ class ProfilePasswordUpdateView(APIView):
         serializer = ProfilePasswordUpdateSerializer(
             data=request.data, context={'request': request}
         )
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except drf_serializers.ValidationError as exc:
+            logger = logging.getLogger(__name__)
+            logger.warning("Password update validation errors: %s", exc.detail)
+            raise
         serializer.save()
         return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
 

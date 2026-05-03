@@ -92,6 +92,7 @@ export default function UserView() {
         data?.current_password?.[0] ||
         data?.new_password?.[0] ||
         data?.confirm_new_password?.[0] ||
+        data?.non_field_errors?.[0] ||
         data?.detail ||
         'Failed to update password.'
       )
