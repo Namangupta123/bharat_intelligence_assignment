@@ -6,6 +6,8 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+ARG VITE_API_BASE_URL=https://taskflow-backend-834510061034.us-central1.run.app
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN npm run build
 
 FROM node:20-alpine AS serve-stage

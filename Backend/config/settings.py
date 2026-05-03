@@ -112,8 +112,9 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 CELERY_TASK_TRACK_STARTED = True
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
-CELERY_IMPORTS = ('tasks.email_tasks',) 
+CELERY_IMPORTS = ('tasks.email_tasks', 'accounts.email_tasks')
 
 if DEBUG:
     CELERY_TASK_ALWAYS_EAGER = True  # run tasks inline during dev/test; no worker needed
@@ -124,7 +125,9 @@ BREVO_SENDER_EMAIL = config('BREVO_SENDER_EMAIL')
 BREVO_SENDER_NAME = config('BREVO_SENDER_NAME', default='Task Manager')
 
 # ── CORS ─────────────────────────────────────────────────────────────────────
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
+    FRONTEND_URL,
 ]
