@@ -26,3 +26,12 @@ class IsUserRole(BasePermission):
             and request.user.is_authenticated
             and request.user.role == 'USER'
         )
+
+
+class IsUserOrManagerRole(BasePermission):
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and request.user.role in ('USER', 'MANAGER')
+        )
