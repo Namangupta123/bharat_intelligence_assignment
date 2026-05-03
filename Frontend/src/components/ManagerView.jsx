@@ -14,7 +14,7 @@ export default function ManagerView() {
   const [updating, setUpdating] = useState(null)
   const [fetchError, setFetchError] = useState('')
   const [updateError, setUpdateError] = useState('')
-  const [profileForm, setProfileForm] = useState({ email: '', currentPassword: '', newPassword: '', confirmNewPassword: '' })
+  const [profileForm, setProfileForm] = useState({ email: '', emailPassword: '', currentPassword: '', newPassword: '', confirmNewPassword: '' })
   const [profileError, setProfileError] = useState('')
   const [profileSuccess, setProfileSuccess] = useState('')
   const [profileLoading, setProfileLoading] = useState(false)
@@ -51,12 +51,12 @@ export default function ManagerView() {
     setProfileSuccess('')
     setProfileLoading(true)
     try {
-      await api.patch('/api/profile/email/', { email: profileForm.email })
+      await api.patch('/api/profile/email/', { email: profileForm.email, current_password: profileForm.emailPassword })
       setProfileSuccess('Email updated successfully.')
-      setProfileForm(f => ({ ...f, email: '' }))
+      setProfileForm(f => ({ ...f, email: '', emailPassword: '' }))
     } catch (err) {
       const data = err.response?.data
-      setProfileError(data?.email?.[0] || data?.detail || 'Failed to update email.')
+      setProfileError(data?.email?.[0] || data?.current_password?.[0] || data?.detail || 'Failed to update email.')
     } finally {
       setProfileLoading(false)
     }
@@ -212,6 +212,15 @@ export default function ManagerView() {
               aria-label="New email address"
               value={profileForm.email}
               onChange={e => setProfileForm(f => ({ ...f, email: e.target.value }))}
+              required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="password"
+              placeholder="Confirm with your current password"
+              aria-label="Current password for email change"
+              value={profileForm.emailPassword}
+              onChange={e => setProfileForm(f => ({ ...f, emailPassword: e.target.value }))}
               required
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
