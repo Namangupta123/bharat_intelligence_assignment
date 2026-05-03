@@ -6,7 +6,7 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, ignore_result=True)
 def send_invitation_email(self, username, temp_password, recipient_email, role):
     if not recipient_email:
         logger.warning("Invitation has no recipient email, skipping.")

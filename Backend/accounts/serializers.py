@@ -24,10 +24,17 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class ProfileEmailUpdateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
+    current_password = serializers.CharField(required=True, write_only=True)
 
     class Meta:
         model = User
-        fields = ['email']
+        fields = ['email', 'current_password']
+
+    def validate_current_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Current password is incorrect.")
+        return value
 
     def validate_email(self, value):
         qs = User.objects.filter(email=value)
@@ -38,6 +45,7 @@ class ProfileEmailUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
+        validated_data.pop('current_password', None)
         instance.email = validated_data['email']
         instance.save()
         return instance

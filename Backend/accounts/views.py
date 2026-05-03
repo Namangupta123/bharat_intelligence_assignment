@@ -1,6 +1,5 @@
 import re
 import secrets
-import random
 from rest_framework.generics import ListAPIView, UpdateAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -57,7 +56,7 @@ class ProfilePasswordUpdateView(APIView):
 
 def _generate_unique_username(base_name, role_suffix):
     for _ in range(10):
-        unique_id = random.randint(1000, 9999)
+        unique_id = secrets.randbelow(9000) + 1000
         username = f"{base_name}{unique_id}_{role_suffix}"
         if not User.objects.filter(username=username).exists():
             return username
@@ -78,10 +77,16 @@ class InviteUserView(APIView):
         base_name = re.sub(r'[^a-z0-9]', '', local_part.lower()) or 'user'
 
         role_suffix = 'manager' if role == 'MANAGER' else 'user'
-        username = _generate_unique_username(base_name, role_suffix)
+        try:
+            username = _generate_unique_username(base_name, role_suffix)
+        except ValueError:
+            return Response(
+                {"detail": "Could not generate a unique username. Please try again."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         temp_password = secrets.token_urlsafe(9)
 
-        User.objects.create_user(
+        user = User.objects.create_user(
             username=username,
             email=email,
             password=temp_password,
@@ -89,12 +94,19 @@ class InviteUserView(APIView):
         )
 
         from accounts.email_tasks import send_invitation_email
-        send_invitation_email.delay(
-            username=username,
-            temp_password=temp_password,
-            recipient_email=email,
-            role=role,
-        )
+        try:
+            send_invitation_email.delay(
+                username=username,
+                temp_password=temp_password,
+                recipient_email=email,
+                role=role,
+            )
+        except Exception:
+            user.delete()
+            return Response(
+                {"detail": "Failed to dispatch invitation email. Please try again."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
         return Response(
             {"detail": "User invited successfully.", "username": username, "role": role},
