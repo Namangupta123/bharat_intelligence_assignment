@@ -1,0 +1,13 @@
+Backend/.venv
+Backend/__pycache__/
+Backend/.pytest_cache/
+Backend/.mypy_cache/
+Backend/.coverage
+Backend/.env
+Frontend/node_modules/
+Frontend/dist/
+Frontend/build/
+Frontend/.env.local
+.DS_Store
+.claude
+startup.md
