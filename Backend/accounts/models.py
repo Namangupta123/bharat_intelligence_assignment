@@ -14,5 +14,7 @@ class User(AbstractUser):
         default=Role.USER,
     )
 
+    REQUIRED_FIELDS = ['email', 'role']
+
     def __str__(self):
         return self.username

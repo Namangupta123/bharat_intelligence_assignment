@@ -112,6 +112,9 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 CELERY_TASK_TRACK_STARTED = True
+
+CELERY_IMPORTS = ('tasks.email_tasks',) 
+
 if DEBUG:
     CELERY_TASK_ALWAYS_EAGER = True  # run tasks inline during dev/test; no worker needed
 
