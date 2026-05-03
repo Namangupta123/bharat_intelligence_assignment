@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     # Third-party
     'rest_framework',
     'rest_framework_simplejwt',
+    'django_celery_results',
     # Local
     'accounts',
     'tasks',
@@ -99,3 +100,20 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
+
+# ── Celery ──────────────────────────────────────────────────────────────────
+CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'default'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CELERY_TASK_TRACK_STARTED = True
+if DEBUG:
+    CELERY_TASK_ALWAYS_EAGER = True  # run tasks inline during dev/test; no worker needed
+
+# ── Brevo ────────────────────────────────────────────────────────────────────
+BREVO_API_KEY = config('BREVO_API_KEY')
+BREVO_SENDER_EMAIL = config('BREVO_SENDER_EMAIL')
+BREVO_SENDER_NAME = config('BREVO_SENDER_NAME', default='Task Manager')
