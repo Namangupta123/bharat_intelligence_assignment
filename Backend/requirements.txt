@@ -8,3 +8,4 @@ celery==5.4.0
 sqlalchemy==2.0.40
 django-celery-results==2.5.1
 requests==2.32.3
+django-cors-headers==4.3.1

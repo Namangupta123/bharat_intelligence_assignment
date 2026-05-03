@@ -11,3 +11,4 @@ Frontend/.env.local
 .DS_Store
 .claude
 startup.md
+docs
