@@ -8,6 +8,25 @@ A production-ready, full-stack multi-user web application built with Django REST
 
 ---
 
+## Demo Credentials (First-Time Login)
+
+The following accounts are pre-seeded for quick exploration of the live app:
+
+| Role    | Username       | Password    | Email               |
+|---------|---------------|-------------|---------------------|
+| User    | demo_user     | Demo@1234   | user@demo.com       |
+| Manager | demo_manager  | Demo@1234   | manager@demo.com    |
+| Admin   | demo_admin    | Demo@1234   | admin@demo.com      |
+
+> **After logging in**, each role can update their own password and email address via the profile settings. Email changes require entering the current password and will be reflected immediately.
+
+Explore the role-specific functionality:
+- **User** — create tasks, assign to a manager, track status, receive email notifications on status change
+- **Manager** — view assigned tasks, approve or reject pending tasks (triggers email to submitter)
+- **Admin** — invite new users, view all users & tasks system-wide, access the live stats dashboard
+
+---
+
 ## Table of Contents
 
 - [Overview](#overview)

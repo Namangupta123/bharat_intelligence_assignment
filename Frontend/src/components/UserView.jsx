@@ -40,10 +40,13 @@ export default function UserView() {
     e.preventDefault()
     setError('')
     setSuccess('')
+    if (!form.assigned_manager) {
+      setError('Please select a manager before submitting.')
+      return
+    }
     setLoading(true)
     try {
-      const payload = { title: form.title, description: form.description }
-      if (form.assigned_manager) payload.assigned_manager = Number(form.assigned_manager)
+      const payload = { title: form.title, description: form.description, assigned_manager: Number(form.assigned_manager) }
       await api.post('/api/tasks/', payload)
       setForm({ title: '', description: '', assigned_manager: '' })
       setSuccess('Task submitted successfully.')
@@ -153,9 +156,10 @@ export default function UserView() {
               <select
                 value={form.assigned_manager}
                 onChange={e => setForm(f => ({ ...f, assigned_manager: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Assigned manager"
+                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${!form.assigned_manager ? 'border-red-300' : 'border-gray-300'}`}
               >
-                <option value="">No manager assigned</option>
+                <option value="">Select a manager *</option>
                 {managers.map(m => (
                   <option key={m.id} value={m.id}>{m.username}</option>
                 ))}
