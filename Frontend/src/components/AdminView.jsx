@@ -220,10 +220,10 @@ export default function AdminView() {
                   <th className="pb-2">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 animate-pulse">
+              <tbody className="divide-y divide-gray-100">
                 {initialLoad
                   ? [1, 2, 3, 4, 5].map(i => (
-                      <tr key={i}>
+                      <tr key={i} className="animate-pulse">
                         {[1, 2, 3, 4, 5, 6].map(j => (
                           <td key={j} className="py-3 pr-4">
                             <div className="h-3 bg-gray-200 rounded w-full" />
