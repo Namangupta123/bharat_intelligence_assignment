@@ -1,0 +1,92 @@
+steps:
+  # =========================
+  # Build Backend
+  # =========================
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t',
+        'us-central1-docker.pkg.dev/bharat-taskflow/app-repo/backend-image',
+        './Backend'
+      ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'us-central1-docker.pkg.dev/bharat-taskflow/app-repo/backend-image'
+      ]
+
+  # =========================
+  # Build Frontend
+  # =========================
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t',
+        'us-central1-docker.pkg.dev/bharat-taskflow/app-repo/frontend-image',
+        '--build-arg',
+        'VITE_API_BASE_URL=https://taskflow-backend-834510061034.us-central1.run.app',
+        './Frontend'
+      ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'us-central1-docker.pkg.dev/bharat-taskflow/app-repo/frontend-image'
+      ]
+
+  # =========================
+  # Deploy Backend
+  # =========================
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      [
+        'run','deploy','taskflow-backend',
+        '--image','us-central1-docker.pkg.dev/bharat-taskflow/app-repo/backend-image',
+        '--region','us-central1',
+        '--allow-unauthenticated',
+        '--port','8000',
+        '--set-secrets',
+        'SECRET_KEY=SECRET_KEY:latest,DEBUG=DEBUG:latest,DATABASE_URL=DATABASE_URL:latest,FRONTEND_URL=FRONTEND_URL:latest,CELERY_BROKER_URL=CELERY_BROKER_URL:latest,BREVO_API_KEY=BREVO_API_KEY:latest,BREVO_SENDER_EMAIL=BREVO_SENDER_EMAIL:latest,BREVO_SENDER_NAME=BREVO_SENDER_NAME:latest'
+      ]
+
+  # =========================
+  # Deploy Frontend
+  # =========================
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      [
+        'run','deploy','taskflow-frontend',
+        '--image','us-central1-docker.pkg.dev/bharat-taskflow/app-repo/frontend-image',
+        '--region','us-central1',
+        '--allow-unauthenticated',
+        '--port','3000'
+      ]
+
+  # =========================
+  # Deploy Celery
+  # =========================
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      [
+        'run','deploy','taskflow-celery',
+        '--image','us-central1-docker.pkg.dev/bharat-taskflow/app-repo/backend-image',
+        '--region','us-central1',
+        '--no-allow-unauthenticated',
+        '--command','sh',
+        '--args','-c,celery -A config worker --loglevel=info --concurrency=1 & python -m http.server 8080',
+        '--min-instances','1',
+        '--set-secrets',
+        'SECRET_KEY=SECRET_KEY:latest,DEBUG=DEBUG:latest,DATABASE_URL=DATABASE_URL:latest,CELERY_BROKER_URL=CELERY_BROKER_URL:latest,BREVO_API_KEY=BREVO_API_KEY:latest,BREVO_SENDER_EMAIL=BREVO_SENDER_EMAIL:latest,BREVO_SENDER_NAME=BREVO_SENDER_NAME:latest'
+      ]
+
+images:
+  - us-central1-docker.pkg.dev/bharat-taskflow/app-repo/backend-image
+  - us-central1-docker.pkg.dev/bharat-taskflow/app-repo/frontend-image
