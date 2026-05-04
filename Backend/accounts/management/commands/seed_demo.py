@@ -5,7 +5,7 @@ from tasks.models import Task
 User = get_user_model()
 
 USERS = [
-    dict(username='naman_user', email='namangupta0330@gmail.com', password='Demo@1234', role='USER'),
+    dict(username='demo_user', email='user@demo.com', password='Demo@1234', role='USER'),
     dict(username='demo_manager', email='manager@demo.com', password='Demo@1234', role='MANAGER'),
     dict(username='demo_admin', email='admin@demo.com', password='Demo@1234', role='ADMIN'),
 ]
