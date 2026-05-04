@@ -47,7 +47,7 @@ steps:
       '--image','us-central1-docker.pkg.dev/bharat-taskflow/app-repo/frontend-image',
       '--region','us-central1',
       '--allow-unauthenticated',
-      '--port','3000'
+      '--port','5173'
     ]
 
   # =========================
