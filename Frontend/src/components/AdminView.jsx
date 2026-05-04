@@ -19,6 +19,7 @@ export default function AdminView() {
   const [overview, setOverview] = useState(null)
   const [users, setUsers] = useState([])
   const [tasks, setTasks] = useState([])
+  const [initialLoad, setInitialLoad] = useState(true)
   const [fetchError, setFetchError] = useState('')
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'USER' })
   const [inviteError, setInviteError] = useState('')
@@ -26,9 +27,11 @@ export default function AdminView() {
   const [inviteLoading, setInviteLoading] = useState(false)
 
   useEffect(() => {
-    api.get('/api/admin/overview/').then(r => setOverview(r.data)).catch(() => setFetchError('Failed to load overview.'))
-    api.get('/api/admin/users/').then(r => setUsers(r.data)).catch(() => setFetchError('Failed to load users.'))
-    api.get('/api/admin/tasks/').then(r => setTasks(r.data)).catch(() => setFetchError('Failed to load tasks.'))
+    Promise.allSettled([
+      api.get('/api/admin/overview/').then(r => setOverview(r.data)).catch(() => setFetchError('Failed to load overview.')),
+      api.get('/api/admin/users/').then(r => setUsers(r.data)).catch(() => setFetchError('Failed to load users.')),
+      api.get('/api/admin/tasks/').then(r => setTasks(r.data)).catch(() => setFetchError('Failed to load tasks.')),
+    ]).finally(() => setInitialLoad(false))
   }, [])
 
   async function handleInvite(e) {
@@ -82,7 +85,16 @@ export default function AdminView() {
             {fetchError}
           </p>
         )}
-        {stats.length > 0 && (
+        {initialLoad ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-pulse">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="bg-white rounded-2xl shadow p-4 text-center">
+                <div className="h-8 w-12 bg-gray-200 rounded mx-auto mb-2" />
+                <div className="h-2.5 w-20 bg-gray-200 rounded mx-auto" />
+              </div>
+            ))}
+          </div>
+        ) : stats.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {stats.map(stat => (
               <div
@@ -146,7 +158,7 @@ export default function AdminView() {
 
         <div className="bg-white rounded-2xl shadow p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            All Users ({users.length})
+            All Users {!initialLoad && `(${users.length})`}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -159,24 +171,34 @@ export default function AdminView() {
                   <th className="pb-2">Joined</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {users.map(u => (
-                  <tr key={u.id} className="hover:bg-gray-50">
-                    <td className="py-2 pr-4 text-gray-400 text-xs">{u.id}</td>
-                    <td className="py-2 pr-4 font-medium text-gray-800">{u.username}</td>
-                    <td className="py-2 pr-4 text-gray-600">{u.email || '—'}</td>
-                    <td className="py-2 pr-4">
-                      <span
-                        className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ROLE_COLORS[u.role]}`}
-                      >
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="py-2 text-gray-500 text-xs">
-                      {new Date(u.date_joined).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
+              <tbody className="divide-y divide-gray-100 animate-pulse">
+                {initialLoad
+                  ? [1, 2, 3, 4, 5].map(i => (
+                      <tr key={i}>
+                        {[1, 2, 3, 4, 5].map(j => (
+                          <td key={j} className="py-3 pr-4">
+                            <div className="h-3 bg-gray-200 rounded w-full" />
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  : users.map(u => (
+                      <tr key={u.id} className="hover:bg-gray-50">
+                        <td className="py-2 pr-4 text-gray-400 text-xs">{u.id}</td>
+                        <td className="py-2 pr-4 font-medium text-gray-800">{u.username}</td>
+                        <td className="py-2 pr-4 text-gray-600">{u.email || '—'}</td>
+                        <td className="py-2 pr-4">
+                          <span
+                            className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ROLE_COLORS[u.role]}`}
+                          >
+                            {u.role}
+                          </span>
+                        </td>
+                        <td className="py-2 text-gray-500 text-xs">
+                          {new Date(u.date_joined).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
               </tbody>
             </table>
           </div>
@@ -184,7 +206,7 @@ export default function AdminView() {
 
         <div className="bg-white rounded-2xl shadow p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            All Tasks ({tasks.length})
+            All Tasks {!initialLoad && `(${tasks.length})`}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -198,29 +220,39 @@ export default function AdminView() {
                   <th className="pb-2">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {tasks.map(t => (
-                  <tr key={t.id} className="hover:bg-gray-50">
-                    <td className="py-2 pr-4 text-gray-400 text-xs">{t.id}</td>
-                    <td className="py-2 pr-4 font-medium text-gray-800 max-w-xs truncate">
-                      {t.title}
-                    </td>
-                    <td className="py-2 pr-4">
-                      <span
-                        className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLORS[t.status]}`}
-                      >
-                        {t.status}
-                      </span>
-                    </td>
-                    <td className="py-2 pr-4 text-gray-600">{t.created_by_username}</td>
-                    <td className="py-2 pr-4 text-gray-600">
-                      {t.assigned_manager_username || '—'}
-                    </td>
-                    <td className="py-2 text-gray-500 text-xs">
-                      {new Date(t.created_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
+              <tbody className="divide-y divide-gray-100 animate-pulse">
+                {initialLoad
+                  ? [1, 2, 3, 4, 5].map(i => (
+                      <tr key={i}>
+                        {[1, 2, 3, 4, 5, 6].map(j => (
+                          <td key={j} className="py-3 pr-4">
+                            <div className="h-3 bg-gray-200 rounded w-full" />
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  : tasks.map(t => (
+                      <tr key={t.id} className="hover:bg-gray-50">
+                        <td className="py-2 pr-4 text-gray-400 text-xs">{t.id}</td>
+                        <td className="py-2 pr-4 font-medium text-gray-800 max-w-xs truncate">
+                          {t.title}
+                        </td>
+                        <td className="py-2 pr-4">
+                          <span
+                            className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLORS[t.status]}`}
+                          >
+                            {t.status}
+                          </span>
+                        </td>
+                        <td className="py-2 pr-4 text-gray-600">{t.created_by_username}</td>
+                        <td className="py-2 pr-4 text-gray-600">
+                          {t.assigned_manager_username || '—'}
+                        </td>
+                        <td className="py-2 text-gray-500 text-xs">
+                          {new Date(t.created_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
               </tbody>
             </table>
           </div>

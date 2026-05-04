@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
+import Spinner from './Spinner'
 
 const STATUS_COLORS = {
   PENDING: 'bg-yellow-100 text-yellow-800',
@@ -17,6 +18,7 @@ export default function UserView() {
   const [fetchError, setFetchError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [profileForm, setProfileForm] = useState({ email: '', emailPassword: '', currentPassword: '', newPassword: '', confirmNewPassword: '' })
   const [profileError, setProfileError] = useState('')
   const [profileSuccess, setProfileSuccess] = useState('')
@@ -28,6 +30,8 @@ export default function UserView() {
       setTasks(data)
     } catch {
       setFetchError('Failed to load tasks.')
+    } finally {
+      setInitialLoad(false)
     }
   }, [])
 
@@ -168,23 +172,38 @@ export default function UserView() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-semibold px-6 py-2 rounded-lg transition-colors"
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-semibold px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
             >
-              {loading ? 'Submitting…' : 'Submit Task'}
+              {loading ? <><Spinner className="h-4 w-4" /><span>Submitting…</span></> : 'Submit Task'}
             </button>
           </form>
         </div>
 
         <div className="bg-white rounded-2xl shadow p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            My Tasks ({tasks.length})
+            My Tasks {!initialLoad && `(${tasks.length})`}
           </h2>
           {fetchError && (
             <p className="text-sm text-red-600 bg-red-50 border border-red-200 p-2 rounded-lg mb-3">
               {fetchError}
             </p>
           )}
-          {tasks.length === 0 ? (
+          {initialLoad ? (
+            <ul className="divide-y divide-gray-100 animate-pulse">
+              {[1, 2, 3].map(i => (
+                <li key={i} className="py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3.5 bg-gray-200 rounded w-2/3" />
+                      <div className="h-2.5 bg-gray-200 rounded w-full" />
+                      <div className="h-2 bg-gray-200 rounded w-1/3" />
+                    </div>
+                    <div className="h-5 w-16 bg-gray-200 rounded-full shrink-0" />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : tasks.length === 0 ? (
             <p className="text-sm text-gray-500">No tasks yet. Submit one above.</p>
           ) : (
             <ul className="divide-y divide-gray-100">

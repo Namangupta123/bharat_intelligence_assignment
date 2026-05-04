@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
+import Spinner from './Spinner'
 
 const STATUS_COLORS = {
   PENDING: 'bg-yellow-100 text-yellow-800',
@@ -11,7 +12,8 @@ const STATUS_COLORS = {
 export default function ManagerView() {
   const { auth, logout } = useAuth()
   const [tasks, setTasks] = useState([])
-  const [updating, setUpdating] = useState(null)
+  const [updating, setUpdating] = useState(null) // { id, action } | null
+  const [initialLoad, setInitialLoad] = useState(true)
   const [fetchError, setFetchError] = useState('')
   const [updateError, setUpdateError] = useState('')
   const [profileForm, setProfileForm] = useState({ email: '', emailPassword: '', currentPassword: '', newPassword: '', confirmNewPassword: '' })
@@ -25,6 +27,8 @@ export default function ManagerView() {
       setTasks(data)
     } catch {
       setFetchError('Failed to load assigned tasks.')
+    } finally {
+      setInitialLoad(false)
     }
   }, [])
 
@@ -33,7 +37,7 @@ export default function ManagerView() {
   }, [fetchTasks])
 
   async function updateStatus(taskId, status) {
-    setUpdating(taskId)
+    setUpdating({ id: taskId, action: status })
     setUpdateError('')
     try {
       await api.patch(`/api/tasks/${taskId}/status/`, { status })
@@ -121,9 +125,27 @@ export default function ManagerView() {
         )}
         <div className="bg-white rounded-2xl shadow p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Pending Review ({pending.length})
+            Pending Review {!initialLoad && `(${pending.length})`}
           </h2>
-          {pending.length === 0 ? (
+          {initialLoad ? (
+            <ul className="divide-y divide-gray-100 animate-pulse">
+              {[1, 2].map(i => (
+                <li key={i} className="py-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3.5 bg-gray-200 rounded w-3/4" />
+                      <div className="h-2.5 bg-gray-200 rounded w-full" />
+                      <div className="h-2 bg-gray-200 rounded w-1/4" />
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <div className="h-7 w-16 bg-gray-200 rounded-lg" />
+                      <div className="h-7 w-14 bg-gray-200 rounded-lg" />
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : pending.length === 0 ? (
             <p className="text-sm text-gray-500">No pending tasks.</p>
           ) : (
             <ul className="divide-y divide-gray-100">
@@ -144,17 +166,21 @@ export default function ManagerView() {
                     <div className="flex gap-2 shrink-0">
                       <button
                         onClick={() => updateStatus(task.id, 'APPROVED')}
-                        disabled={updating === task.id}
-                        className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                        disabled={updating?.id === task.id}
+                        className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
                       >
-                        Approve
+                        {updating?.id === task.id && updating?.action === 'APPROVED' ? (
+                          <><Spinner className="h-3 w-3" /><span>Approving…</span></>
+                        ) : 'Approve'}
                       </button>
                       <button
                         onClick={() => updateStatus(task.id, 'REJECTED')}
-                        disabled={updating === task.id}
-                        className="bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                        disabled={updating?.id === task.id}
+                        className="bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
                       >
-                        Reject
+                        {updating?.id === task.id && updating?.action === 'REJECTED' ? (
+                          <><Spinner className="h-3 w-3" /><span>Rejecting…</span></>
+                        ) : 'Reject'}
                       </button>
                     </div>
                   </div>
