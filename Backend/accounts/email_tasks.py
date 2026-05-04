@@ -33,7 +33,7 @@ def send_invitation_email(self, username, temp_password, recipient_email, role):
         response = requests.post(
             "https://api.brevo.com/v3/smtp/email",
             json=payload,
-            headers={"api-key": settings.BREVO_API_KEY, "Content-Type": "application/json"},
+            headers={"api-key": settings.BREVO_API_KEY.strip(), "Content-Type": "application/json"},
             timeout=10,
         )
         response.raise_for_status()

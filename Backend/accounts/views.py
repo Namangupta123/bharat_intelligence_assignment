@@ -100,6 +100,7 @@ class InviteUserView(APIView):
             role=role,
         )
 
+        logger = logging.getLogger(__name__)
         from accounts.email_tasks import send_invitation_email
         try:
             send_invitation_email.delay(
@@ -108,7 +109,8 @@ class InviteUserView(APIView):
                 recipient_email=email,
                 role=role,
             )
-        except Exception:
+        except Exception as exc:
+            logger.exception("Failed to dispatch invitation email for %s: %s", email, exc)
             user.delete()
             return Response(
                 {"detail": "Failed to dispatch invitation email. Please try again."},
